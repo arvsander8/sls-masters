@@ -1,0 +1,91 @@
+service: sls-category-master
+
+custom:
+  myStage: ${opt:stage, self:provider.stage}
+  settings:
+    dev:
+      ITEMS_DYNAMODB_TABLE: category-master-dev
+    prod:
+      ITEMS_DYNAMODB_TABLE: category-master-prod
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  profile: default
+  region: us-east-1
+  environment: ${self:custom.settings.${self:custom.myStage}}
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetCategory"
+        - "dynamodb:PutCategory"
+        - "dynamodb:UpdateCategory"
+        - "dynamodb:DeleteCategory"
+        - "dynamodb:ListStreams"
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.${self:custom.myStage}.ITEMS_DYNAMODB_TABLE}"
+
+plugins:
+  - serverless-offline
+
+functions:
+  saveCategory:
+    handler: handler.saveCategory
+    events:
+      - http:
+          path: category
+          method: post
+  getCategory:
+    handler: handler.getCategory
+    events:
+      - http:
+          path: category/{categoryId}
+          method: get
+  getAllCategories:
+    handler: handler.getAllCategories
+    events:
+      - http:
+          path: categories
+          method: get
+  deleteCategory:
+    handler: handler.deleteCategory
+    events:
+        - http:
+            path: category/{categoryId}
+            method: delete
+  updateCategory:
+    handler: handler.updateCategory
+    events:
+      - http:
+          path: category/{categoryId}
+          method: put
+  triggerStream:
+    handler: handler.triggerStream
+    events:
+       - stream:
+          type: dynamodb
+          batchSize: 1
+          startingPosition: LATEST
+          arn:
+            Fn::GetAtt:
+              - ImagesTable
+              - StreamArn
+
+resources:
+  Resources:
+    ImagesTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: "categoryId"
+          AttributeType: "S"
+        KeySchema:
+        - AttributeName: "categoryId"
+          KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.settings.${self:custom.myStage}.ITEMS_DYNAMODB_TABLE}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE

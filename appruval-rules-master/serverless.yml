@@ -1,0 +1,87 @@
+service: sls-appruval-master
+
+custom:
+  myStage: ${opt:stage, self:provider.stage}
+  settings:
+    dev:
+      ITEMS_DYNAMODB_TABLE: appruval-master-dev
+    prod:
+      ITEMS_DYNAMODB_TABLE: appruval-master-prod
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  profile: default
+  region: us-east-1
+  environment: ${self:custom.settings.${self:custom.myStage}}
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:*
+      Resource:
+        - "*"
+
+plugins:
+  - serverless-offline
+
+functions:
+  saveAppruval:
+    handler: handler.saveAppruval
+    events:
+      - http:
+          path: appruval
+          method: post
+  getAppruval:
+    handler: handler.getAppruval
+    events:
+      - http:
+          path: appruval/{appruvalId}
+          method: get
+  getAllAppruval:
+    handler: handler.getAllAppruval
+    events:
+      - http:
+          path: appruval
+          method: get
+  deleteAppruval:
+    handler: handler.deleteAppruval
+    events:
+        - http:
+            path: appruval/{appruvalId}
+            method: delete
+  updateAppruval:
+    handler: handler.updateAppruval
+    events:
+      - http:
+          path: appruval/{appruvalId}
+          method: put
+  triggerStream:
+    handler: handler.triggerStream
+    events:
+       - stream:
+          type: dynamodb
+          batchSize: 1
+          startingPosition: LATEST
+          arn:
+            Fn::GetAtt:
+              - ImagesTable
+              - StreamArn
+
+resources:
+  Resources:
+    ImagesTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: "appruvalId"
+          AttributeType: "S"
+        KeySchema:
+        - AttributeName: "appruvalId"
+          KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.settings.${self:custom.myStage}.ITEMS_DYNAMODB_TABLE}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE

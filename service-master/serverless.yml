@@ -1,0 +1,87 @@
+service: sls-service-master
+
+custom:
+  myStage: ${opt:stage, self:provider.stage}
+  settings:
+    dev:
+      ITEMS_DYNAMODB_TABLE: service-master-dev
+    prod:
+      ITEMS_DYNAMODB_TABLE: service-master-prod
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  profile: default
+  region: us-east-1
+  environment: ${self:custom.settings.${self:custom.myStage}}
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:*
+      Resource:
+        - "*"
+
+plugins:
+  - serverless-offline
+
+functions:
+  saveService:
+    handler: handler.saveService
+    events:
+      - http:
+          path: service
+          method: post
+  getService:
+    handler: handler.getService
+    events:
+      - http:
+          path: service/{serviceId}
+          method: get
+  getAllService:
+    handler: handler.getAllService
+    events:
+      - http:
+          path: service
+          method: get
+  deleteService:
+    handler: handler.deleteService
+    events:
+        - http:
+            path: service/{serviceId}
+            method: delete
+  updateService:
+    handler: handler.updateService
+    events:
+      - http:
+          path: service/{serviceId}
+          method: put
+  triggerStream:
+    handler: handler.triggerStream
+    events:
+       - stream:
+          type: dynamodb
+          batchSize: 1
+          startingPosition: LATEST
+          arn:
+            Fn::GetAtt:
+              - ImagesTable
+              - StreamArn
+
+resources:
+  Resources:
+    ImagesTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: "serviceId"
+          AttributeType: "S"
+        KeySchema:
+        - AttributeName: "serviceId"
+          KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.settings.${self:custom.myStage}.ITEMS_DYNAMODB_TABLE}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
