@@ -1,8 +1,10 @@
 'use strict';
 
+
 const databaseManager = require('./databaseManager');
 const uuidv1 = require('uuid/v1');
-
+var schema =  require('./schema.json');
+var validation = require('./validateRequest.js');
 function createResponse(statusCode, message) {
   return {
     statusCode: statusCode,
@@ -11,30 +13,25 @@ function createResponse(statusCode, message) {
 }
 
 module.exports.saveCategory = (event, context, callback) => {
+  
   const category = JSON.parse(event.body);
 
-  if(Object.keys(product).length == 3)
+ var cmp = validation.compare(schema["schema"], Object.keys(category));
+  
+  if(cmp == 0)
   {
-    if( Object.keys(category)[0] == 'code' &&
-        Object.keys(category)[1] == 'description' &&
-        Object.keys(category)[2] == 'type' 
-         ){
           console.log("Cabeceras correctas");
           category.categoryId = uuidv1();
           databaseManager.saveCategory(category).then(response => {
             console.log(response);
             callback(null, createResponse(200, response));
           });
-        }
-        else{
-          callback( null, createResponse(502, {'message':'Alguno de los campos no esta bien definido'}));
-        }
-
   }
   else{
-    callback( null, createResponse(502, {'message':"Debe ingresar los 3 campos obligatorios"}));
+    callback(null, createResponse(400, {"errorMessage":cmp}));
   }
-
+    
+  
 };
 
 module.exports.getCategory = (event, context, callback) => {
@@ -46,11 +43,19 @@ module.exports.getCategory = (event, context, callback) => {
   });
 };
 
+module.exports.getAllCategory = (event, context, callback) => {
+
+  databaseManager.getAllCategory().then(response => {
+    console.log(response);
+    callback(null, createResponse(200, response));
+  });
+};
+
 module.exports.deleteCategory = (event, context, callback) => {
   const categoryId = event.pathParameters.categoryId;
 
   databaseManager.deleteCategory(categoryId).then(response => {
-    callback(null, createResponse(200, 'Category was deleted'));
+    callback(null, createResponse(200, 'Categoryo fue Eliminado'));
   });
 };
 

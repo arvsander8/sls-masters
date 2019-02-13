@@ -16,7 +16,11 @@ module.exports.saveCategory = category => {
   };
 
   return dynamo.put(params).promise().then(() => {
-    return category.categoryId;
+    try {
+      return category.categoryId;
+    } catch (error) {
+
+    }
   });
 };
 
@@ -29,11 +33,11 @@ module.exports.getCategory = categoryId => {
   };
 
   return dynamo.get(params).promise().then(result => {
-    return result.Category;
+    return result.Item;
   });
 };
 
-module.exports.getAllCategories = categoryId => {
+module.exports.getAllCategory = categoryId => {
   const params = {
     TableName: TABLE_NAME
   };

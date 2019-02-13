@@ -2,6 +2,8 @@
 
 const databaseManager = require('./databaseManager');
 const uuidv1 = require('uuid/v1');
+var schema =  require('./schema.json');
+var validation = require('./validateRequest.js');
 
 function createResponse(statusCode, message) {
   return {
@@ -12,29 +14,23 @@ function createResponse(statusCode, message) {
 
 module.exports.saveUnit = (event, context, callback) => {
   const unit = JSON.parse(event.body);
-  if(Object.keys(unit).length == 3)
-  {
-    if( Object.keys(unit)[0] == 'code' &&
-        Object.keys(unit)[1] == 'description' &&
-        Object.keys(unit)[2] == 'abbreviation'  ){
-          console.log("Cabeceras correctas");
-          unit.unitId = uuidv1();
-          databaseManager.saveUnit(unit).then(response => {
-            console.log(response);
-            callback(null, createResponse(200, response));
-          });
-        }
-        else{
-          callback( null, createResponse(502, {'message':'Alguno de los campos no esta bien definido'}));
-        }
 
+  var cmp = validation.compare(schema["schema"], Object.keys(unit));
+
+  if (cmp == 0) {
+    console.log("Cabeceras correctas");
+    unit.unitId = uuidv1();
+    databaseManager.saveUnit(unit).then(response => {
+      console.log(response);
+      callback(null, createResponse(200, response));
+    });
   }
-  else{
-    callback( null, createResponse(502, {'message':"Debe ingresar los 3 campos obligatorios"}));
+  else {
+    callback(null, createResponse(400, { "errorMessage": cmp }));
   }
 
-    
-  
+
+
 };
 
 module.exports.getUnit = (event, context, callback) => {

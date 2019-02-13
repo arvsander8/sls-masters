@@ -40,7 +40,9 @@ module.exports.getAllService = serviceId => {
 
   return dynamo.scan(params).promise().then(result => {
     return result;
-  });
+  }).catch(function(err) {
+    return err
+  });;
 };
 
 module.exports.deleteService = serviceId => {

@@ -26,32 +26,32 @@ plugins:
   - serverless-offline
 
 functions:
-  savebusiness:
-    handler: handler.savebusiness
+  saveBusiness:
+    handler: handler.saveBusiness
     events:
       - http:
           path: business
           method: post
-  getbusiness:
-    handler: handler.getbusiness
+  getBusiness:
+    handler: handler.getBusiness
     events:
       - http:
           path: business/{businessId}
           method: get
-  getAllbusiness:
-    handler: handler.getAllbusiness
+  getAllBusiness:
+    handler: handler.getAllBusiness
     events:
       - http:
           path: business
           method: get
-  deletebusiness:
-    handler: handler.deletebusiness
+  deleteBusiness:
+    handler: handler.deleteBusiness
     events:
         - http:
             path: business/{businessId}
             method: delete
   updatebusiness:
-    handler: handler.updatebusiness
+    handler: handler.updateBusiness
     events:
       - http:
           path: business/{businessId}

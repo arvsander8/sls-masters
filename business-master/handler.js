@@ -2,6 +2,8 @@
 
 const databaseManager = require('./databaseManager');
 const uuidv1 = require('uuid/v1');
+var schema =  require('./schema.json');
+var validation = require('./validateRequest.js');
 
 function createResponse(statusCode, message) {
   return {
@@ -12,30 +14,21 @@ function createResponse(statusCode, message) {
 
 module.exports.saveBusiness = (event, context, callback) => {
   const business = JSON.parse(event.body);
-  if(Object.keys(business).length == 4)
-  {
-    if( Object.keys(business)[0] == 'code' &&
-        Object.keys(business)[1] == 'data' &&
-        Object.keys(business)[2] == 'value' &&
-        Object.keys(business)[3] == 'type'  ){
-          console.log("Cabeceras correctas");
-          business.businessId = uuidv1();
-          databaseManager.saveBusiness(business).then(response => {
-            console.log(response);
-            callback(null, createResponse(200, response));
-          });
-        }
-        else{
-          callback( null, createResponse(502, {'message':'Alguno de los campos no esta bien definido'}));
-        }
 
+  var cmp = validation.compare(schema["schema"], Object.keys(business));
+
+  if (cmp == 0) {
+    console.log("Cabeceras correctas");
+    business.businessId = uuidv1();
+    databaseManager.saveBusiness(business).then(response => {
+      console.log(response);
+      callback(null, createResponse(200, response));
+    });
   }
-  else{
-    callback( null, createResponse(502, {'message':"Debe ingresar los 4 campos obligatorios"}));
+  else {
+    callback(null, createResponse(400, { "errorMessage": cmp }));
   }
 
-    
-  
 };
 
 module.exports.getBusiness = (event, context, callback) => {

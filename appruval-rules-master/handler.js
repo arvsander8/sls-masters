@@ -12,30 +12,22 @@ function createResponse(statusCode, message) {
 
 module.exports.saveAppruval = (event, context, callback) => {
   const appruval = JSON.parse(event.body);
-  if(Object.keys(appruval).length == 4)
-  {
-    if( Object.keys(appruval)[0] == 'code' &&
-        Object.keys(appruval)[1] == 'rule' &&
-        Object.keys(appruval)[2] == 'minValue' &&
-        Object.keys(appruval)[3] == 'maxValue' ){
-          console.log("Cabeceras correctas");
-          appruval.appruvalId = uuidv1();
-          databaseManager.saveAppruval(appruval).then(response => {
-            console.log(response);
-            callback(null, createResponse(200, response));
-          });
-        }
-        else{
-          callback( null, createResponse(502, {'message':'Alguno de los campos no esta bien definido'}));
-        }
+
+  var cmp = validation.compare(schema["schema"], Object.keys(product));
+
+  if (cmp == 0) {
+    console.log("Cabeceras correctas");
+    appruval.appruvalId = uuidv1();
+    databaseManager.saveAppruval(appruval).then(response => {
+      console.log(response);
+      callback(null, createResponse(200, response));
+    });
 
   }
-  else{
-    callback( null, createResponse(502, {'message':"Debe ingresar los 4 campos obligatorios"}));
+  else {
+    callback(null, createResponse(400, { "errorMessage": cmp }));
   }
 
-    
-  
 };
 
 module.exports.getAppruval = (event, context, callback) => {

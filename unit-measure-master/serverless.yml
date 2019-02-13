@@ -26,32 +26,32 @@ plugins:
   - serverless-offline
 
 functions:
-  saveProduct:
-    handler: handler.saveProduct
+  saveUnit:
+    handler: handler.saveUnit
     events:
       - http:
           path: unit
           method: post
-  getProduct:
-    handler: handler.getProduct
+  getUnit:
+    handler: handler.getUnit
     events:
       - http:
           path: unit/{unitId}
           method: get
-  getAllProduct:
-    handler: handler.getAllProduct
+  getAllUnit:
+    handler: handler.getAllUnit
     events:
       - http:
           path: unit
           method: get
-  deleteProduct:
-    handler: handler.deleteProduct
+  deleteUnit:
+    handler: handler.deleteUnit
     events:
         - http:
             path: unit/{unitId}
             method: delete
-  updateProduct:
-    handler: handler.updateProduct
+  updateUnit:
+    handler: handler.updateUnit
     events:
       - http:
           path: unit/{unitId}

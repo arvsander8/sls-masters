@@ -18,13 +18,9 @@ provider:
   iamRoleStatements:
     - Effect: "Allow"
       Action:
-        - "dynamodb:GetCategory"
-        - "dynamodb:PutCategory"
-        - "dynamodb:UpdateCategory"
-        - "dynamodb:DeleteCategory"
-        - "dynamodb:ListStreams"
+        - dynamodb:*
       Resource:
-        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.${self:custom.myStage}.ITEMS_DYNAMODB_TABLE}"
+        - "*"
 
 plugins:
   - serverless-offline
@@ -42,11 +38,11 @@ functions:
       - http:
           path: category/{categoryId}
           method: get
-  getAllCategories:
-    handler: handler.getAllCategories
+  getAllCategory:
+    handler: handler.getAllCategory
     events:
       - http:
-          path: categories
+          path: category
           method: get
   deleteCategory:
     handler: handler.deleteCategory

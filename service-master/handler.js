@@ -2,6 +2,8 @@
 
 const databaseManager = require('./databaseManager');
 const uuidv1 = require('uuid/v1');
+var schema =  require('./schema.json');
+var validation = require('./validateRequest.js');
 
 function createResponse(statusCode, message) {
   return {
@@ -12,32 +14,21 @@ function createResponse(statusCode, message) {
 
 module.exports.saveService = (event, context, callback) => {
   const service = JSON.parse(event.body);
-  if(Object.keys(service).length == 6)
-  {
-    if( Object.keys(service)[0] == 'code' &&
-        Object.keys(service)[1] == 'name' &&
-        Object.keys(service)[2] == 'description' &&
-        Object.keys(service)[3] == 'price' &&
-        Object.keys(service)[4] == 'time' &&
-        Object.keys(service)[5] == 'category' ){
-          console.log("Cabeceras correctas");
-          service.serviceId = uuidv1();
-          databaseManager.saveService(service).then(response => {
-            console.log(response);
-            callback(null, createResponse(200, response));
-          });
-        }
-        else{
-          callback( null, createResponse(502, {'message':'Alguno de los campos no esta bien definido'}));
-        }
 
+  var cmp = validation.compare(schema["schema"], Object.keys(service));
+
+  if (cmp == 0) {
+    service.serviceId = uuidv1();
+    databaseManager.saveService(service).then(response => {
+      console.log(response);
+      callback(null, createResponse(200, response));
+    });
   }
-  else{
-    callback( null, createResponse(502, {'message':"Debe ingresar los 6 campos obligatorios"}));
+  else {
+    callback(null, createResponse(400, { "errorMessage": cmp }));
   }
 
-    
-  
+
 };
 
 module.exports.getService = (event, context, callback) => {

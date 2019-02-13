@@ -16,7 +16,11 @@ module.exports.saveProduct = product => {
   };
 
   return dynamo.put(params).promise().then(() => {
-    return product.productId;
+    try {
+      return product.productId;
+    } catch (error) {
+
+    }
   });
 };
 
